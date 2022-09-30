@@ -3,7 +3,7 @@ import random
 from argparse import ArgumentParser
 from enum import Enum
 import time
-from . import controller
+import controller
 import math
 import os
 

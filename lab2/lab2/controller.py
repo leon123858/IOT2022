@@ -19,3 +19,6 @@ def on_sensor_data(event, my_car):
     ## TODO
     ## Find the distance to the coach car using LiDAR points. You may check this.
     ## https://carla.readthedocs.io/en/latest/python_api/#carla.SemanticLidarDetection
+    for i,point in enumerate(vehicle_points):
+        # x,y,z,cos_inc_angle,object_idx,object_tag
+        print(point)
