@@ -40,5 +40,5 @@ def on_sensor_data(event, my_car):
         cosine = point.cos_inc_angle
         tea_vec = Vector3D(x=location.x, y=location.y, z=location.z)
         origin_dis = tea_vec.length()
-        real_dis = origin_dis
+        real_dis = origin_dis * cosine
         my_car.distance_front = real_dis
