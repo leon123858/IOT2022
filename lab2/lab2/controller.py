@@ -13,6 +13,14 @@ def step(my_car):
         control = my_car.get_control()
         control.throttle = 1.0
         control.brake = 1.0
+        # choice strategy
+        if distance <= 3:
+            print("fail distance", distance)
+            raise "fail distance"
+        elif distance <= 10:
+            control.brake = 0
+        else:
+            assert False
         my_car.apply_control(control)
     except:
         return
