@@ -11,7 +11,7 @@ def step(my_car):
         distance = my_car.distance_front
         print("distance:", distance)
         control = my_car.get_control()
-        control.throttle = 0.01*(10-my_car.get_velocity().length())
+        control.throttle = 0.1*(20-my_car.get_velocity().length())
         # choice strategy
         if distance <= 3:
             print("fail distance", distance)
