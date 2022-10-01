@@ -16,11 +16,13 @@ def step(my_car):
         # choice strategy
         if distance <= 3:
             print("fail distance", distance)
-            raise "fail distance"
-        elif distance <= 10:
             control.brake = 1.0
+        elif my_car.get_velocity().length() >= 23:
+            control.throttle = 0.2
+            control.brake = 0.5
         else:
-            assert False
+            control.throttle = 0.2
+            control.brake = 0
         my_car.apply_control(control)
     except:
         return
@@ -42,5 +44,4 @@ def on_sensor_data(event, my_car):
         cosine = point.cos_inc_angle
         origin_dis = np.sqrt(location.x**2 + location.y**2 + location.z**2)
         real_dis = cosine * origin_dis
-        print(point.object_idx)
         my_car.distance_front = real_dis
