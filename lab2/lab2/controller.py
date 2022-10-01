@@ -1,6 +1,4 @@
 from carla import Vector3D, CityObjectLabel
-import numpy as np
-import math
 
 
 def step(my_car):
@@ -11,16 +9,16 @@ def step(my_car):
         distance = my_car.distance_front
         print("distance:", distance)
         control = my_car.get_control()
-        control.throttle = 0.05*(20-my_car.get_velocity().length())
-        # choice strategy
-        if distance <= 3:
-            print("fail distance", distance)
-            control.brake = 1.0
-        elif my_car.get_velocity().length() >= 23:
-            control.throttle = 0.2
-            control.brake = 0.5
-        else:
-            control.brake = 0
+        # control.throttle = 0.05*(20-my_car.get_velocity().length())
+        # # choice strategy
+        # if distance <= 3:
+        #     print("fail distance", distance)
+        #     control.brake = 1.0
+        # elif my_car.get_velocity().length() >= 23:
+        #     control.throttle = 0.2
+        #     control.brake = 0.5
+        # else:
+        control.brake = 0
         my_car.apply_control(control)
     except:
         return
@@ -40,6 +38,7 @@ def on_sensor_data(event, my_car):
             continue
         location = point.point
         cosine = point.cos_inc_angle
-        origin_dis = np.sqrt(location.x**2 + location.y**2 + location.z**2)
-        real_dis = cosine * origin_dis
+        tea_vec = Vector3D(x=location.x, y=location.y, z=location.z)
+        origin_dis = tea_vec.distance_squared()
+        real_dis = origin_dis
         my_car.distance_front = real_dis
