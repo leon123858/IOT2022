@@ -19,7 +19,8 @@ TEACHER_DISTANCE = 100.0
 SPECTATOR_TRANS = Transform(
     Location(608.5, -17.0, SPEC_HEIGHT), Rotation(0.0, 180.0, 0.0)
 )
-STUDENT_TRANS = Transform(Location(608.5, -17.0, 0.1), Rotation(0.0, 180.0, 0.0))
+STUDENT_TRANS = Transform(Location(608.5, -17.0, 0.1),
+                          Rotation(0.0, 180.0, 0.0))
 TEACHER_TRANS = Transform(
     Location(608.5 - INIT_DISTANCE_M, -17.0, 0.1), Rotation(0.0, 180.0, 0.0)
 )
@@ -49,7 +50,8 @@ def stop_car(car):
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("--addr", default="localhost", help="CARLA server address")
+    parser.add_argument("--addr", default="localhost",
+                        help="CARLA server address")
     parser.add_argument("--port", default=2000, help="CARLA server port")
     parser.add_argument("--no-follow-car", action="store_true")
     args = parser.parse_args()
@@ -57,30 +59,30 @@ def main():
     teacher_speed_mps = TEACHER_SPEED_KMPH * 1000 / 3600
     stu_speed_thresh_mps = STU_SPEED_THRESH_KMPH * 1000 / 3600
 
-    ## Connect to the client and retrieve the world object
+    # Connect to the client and retrieve the world object
     client = Client(args.addr, int(args.port))
     client.load_world(WORLD)
     world = client.get_world()
 
-    ## Enable synchronous mode
+    # Enable synchronous mode
     settings = world.get_settings()
     settings.synchronous_mode = True  # Enables synchronous mode
     settings.fixed_delta_seconds = 0.05
     world.apply_settings(settings)
 
-    ## Create state variable
+    # Create state variable
     state = State.FORWARDING
 
-    ## Configure spectator
+    # Configure spectator
     spec = world.get_spectator()
     spec.set_transform(SPECTATOR_TRANS)
 
-    ## Spawn vehicles
+    # Spawn vehicles
     vblu = world.get_blueprint_library().find("vehicle.tesla.model3")
     stu_car = world.spawn_actor(vblu, STUDENT_TRANS)
     tea_car = world.spawn_actor(vblu, TEACHER_TRANS)
 
-    ## TTC list used for judge
+    # TTC list used for judge
     ttc_list = list()
 
     def on_collision(event):
@@ -99,7 +101,7 @@ def main():
         stop_car(tea_car)
         stop_car(stu_car)
 
-        ## Compute TTC score
+        # Compute TTC score
         if ttc_list:
             mean_ttc = sum(ttc_list) / len(ttc_list)
         else:
@@ -120,7 +122,7 @@ def main():
         else:
             ttc_score = 0
 
-        ## Compute distance score
+        # Compute distance score
         dist = stu_car.get_location().distance(tea_car.get_location())
 
         if dist < 5.0:
@@ -167,20 +169,21 @@ def main():
         dist = stu_car.get_location().distance(tea_car.get_location())
         acc = stu_car.get_acceleration().length()
 
-        ## Compute TTC when velocity >= 1 m/s
+        # Compute TTC when velocity >= 1 m/s
         if veh >= 1.0:
             ttc = dist / veh
         else:
             ttc = float("nan")
 
-        lateral_offset = abs(STUDENT_TRANS.location.y - stu_car.get_location().y)
+        lateral_offset = abs(STUDENT_TRANS.location.y -
+                             stu_car.get_location().y)
         print(
             "t={:.2f}s v={:.2f}km/h ttc={:.2f}s lat_off={:.2f}m".format(
                 elapsed_s, veh * 3.6, ttc, lateral_offset
             )
         )
 
-        ## Save TTC
+        # Save TTC
         if not math.isnan(ttc):
             ttc_list.append(ttc)
 
@@ -201,29 +204,31 @@ def main():
             on_fail()
 
         if lateral_offset > LATERAL_OFFSET_M:
-            print("FAIL: Lateral movement too large (< {} m)".format(LATERAL_OFFSET_M))
+            print("FAIL: Lateral movement too large (< {} m)".format(
+                LATERAL_OFFSET_M))
             on_fail()
 
-    ## Add a collision sensor on the student car
+    # Add a collision sensor on the student car
     cblu = world.get_blueprint_library().find("sensor.other.collision")
     col_sensor = world.spawn_actor(cblu, Transform(), attach_to=stu_car)
     col_sensor.listen(on_collision)
 
-    ## Add a lidar on the student car
+    # Add a lidar on the student car
     lblu = world.get_blueprint_library().find("sensor.lidar.ray_cast_semantic")
     lblu.set_attribute("channels", "32")
     lblu.set_attribute("points_per_second", "600000")
     lblu.set_attribute("rotation_frequency", "10")
     lblu.set_attribute("range", str(LIDAR_RANGE_M))
     lidar_sensor = world.spawn_actor(lblu, Transform(), attach_to=stu_car)
-    lidar_sensor.listen(lambda event: controller.on_sensor_data(event, stu_car))
+    lidar_sensor.listen(
+        lambda event: controller.on_sensor_data(event, stu_car))
 
     try:
-        ## Skip 10 frames (~1s for 10fps)
+        # Skip 10 frames (~1s for 10fps)
         for _ in range(10):
             world.tick()
 
-        ## Wait for the student car to start moving
+        # Wait for the student car to start moving
         while True:
             controller.step(stu_car)
             world.tick()
@@ -232,17 +237,17 @@ def main():
             if vel >= VELOCIDY_THRESH:
                 break
 
-        ## Teachar car starts running
+        # Teachar car starts running
         tea_car.set_target_velocity(Vector3D(-teacher_speed_mps, 0, 0))
 
-        ## start looping
+        # start looping
         since = time.time()
 
         while True:
             controller.step(stu_car)
             world.tick()
 
-            ## Stick the spectator to the student car
+            # Stick the spectator to the student car
             if not args.no_follow_car:
                 stu_trans = stu_car.get_transform()
                 spec_loc = Location(
@@ -252,11 +257,11 @@ def main():
                 spec_trans = Transform(spec_loc, spec_rot)
                 spec.set_transform(spec_trans)
 
-            ## Check violations
+            # Check violations
             if state == State.FORWARDING or state == State.BRAKING:
                 check()
 
-            ## Run state transition
+            # Run state transition
             if state == State.FORWARDING:
                 if tea_car.get_location().x < TEACHER_X_THRESH:
                     stop_car(tea_car)
@@ -285,7 +290,7 @@ def main():
         return
 
     try:
-        ## loop forever
+        # loop forever
         while True:
             world.tick()
     except KeyboardInterrupt:
