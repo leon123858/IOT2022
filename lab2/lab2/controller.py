@@ -11,19 +11,12 @@ def step(my_car):
         print("distance:", distance)
         control = my_car.get_control()
         s_err = distance - 5
-        if s_err > 10:
-            p = 0.05
+        if s_err > 5:
+            p = 0.01
             i = 0.05
             v_err = 20 - my_car.get_velocity().length()
             control.throttle = s_err*p+v_err*i
-            control.throttle = min(control.throttle, 0.8)
-            control.brake = 0
-        elif s_err > 5:
-            p = 0.05
-            i = 0.05
-            v_err = 10 - my_car.get_velocity().length()
-            control.throttle = s_err*p+v_err*i
-            control.throttle = min(control.throttle, 0.4)
+            control.throttle = min(control.throttle, 0.2)
             control.brake = 0
         else:
             control.brake = 1
