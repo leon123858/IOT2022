@@ -10,20 +10,24 @@ def step(my_car):
         my_car.before_distance = distance
         print("distance:", distance)
         control = my_car.get_control()
-        p = 0.5
-        i = 0.1
-        d = 0.5
-        # if distance > 10:
-        # control.throttle = (distance-5)*p + \
-        #     (20 - my_car.get_velocity().length())*i + \
-        #     (2-my_car.get_acceleration().length())*d
+        s_err = distance - 5
+        if s_err > 10:
+            p = 0.05
+            i = 0.05
+            v_err = 20 - my_car.get_velocity().length()
+            control.throttle = s_err*p+v_err*i
+            control.throttle = min(control.throttle, 0.8)
+            control.brake = 0
+        elif s_err > 5:
+            p = 0.05
+            i = 0.05
+            v_err = 10 - my_car.get_velocity().length()
+            control.throttle = s_err*p+v_err*i
+            control.throttle = min(control.throttle, 0.4)
+            control.brake = 0
+        else:
+            control.brake = 1
 
-        target_velocity = (distance-5)*p
-        target_velocity = min(target_velocity, 25)
-        if target_velocity - my_car.get_velocity().length() > 10:
-            target_velocity = my_car.get_velocity().length() + 10
-        my_car.set_target_velocity(Vector3D(-target_velocity, 0, 0))
-        # control.brake = 0
         my_car.apply_control(control)
     except:
         return
