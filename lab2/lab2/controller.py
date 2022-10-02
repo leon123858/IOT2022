@@ -10,9 +10,12 @@ def step(my_car):
         my_car.before_distance = distance
         print("distance:", distance)
         control = my_car.get_control()
-        p = 0.5
-        i = 0
-        control.throttle = distance*p + (20 - my_car.get_velocity().length())*i
+        p = 0.05
+        i = 0.1
+        d = 0.5
+        control.throttle = (distance-5)*p + \
+            (20 - my_car.get_velocity().length())*i + \
+            (2-my_car.get_acceleration().length())*d
         control.brake = 0
         my_car.apply_control(control)
     except:
