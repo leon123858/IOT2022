@@ -8,15 +8,15 @@ def step(my_car):
     try:
         distance = my_car.distance_front
         my_car.before_distance = distance
-        print("distance:", distance)
         control = my_car.get_control()
         s_err = distance - 5
         if s_err > 5:
-            p = 0.01
+            p = 0.0825
             i = 0.05
-            v_err = 20 - my_car.get_velocity().length()
+            v_err = 5 - my_car.get_velocity().length()
             control.throttle = s_err*p+v_err*i
-            control.throttle = min(control.throttle, 0.2)
+
+            control.throttle = min(control.throttle, 0.35)
             control.brake = 0
         else:
             control.brake = 1
