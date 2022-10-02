@@ -7,17 +7,12 @@ def step(my_car):
     # https://carla.readthedocs.io/en/latest/python_api/#carla.VehicleControl
     try:
         distance = my_car.distance_front
+        my_car.before_distance = distance
         print("distance:", distance)
         control = my_car.get_control()
-        # control.throttle = 0.05*(20-my_car.get_velocity().length())
-        # # choice strategy
-        # if distance <= 3:
-        #     print("fail distance", distance)
-        #     control.brake = 1.0
-        # elif my_car.get_velocity().length() >= 23:
-        #     control.throttle = 0.2
-        #     control.brake = 0.5
-        # else:
+        p = 0.5
+        i = 0
+        control.throttle = distance*p + (20 - my_car.get_velocity().length())*i
         control.brake = 0
         my_car.apply_control(control)
     except:
@@ -37,8 +32,5 @@ def on_sensor_data(event, my_car):
         if point.object_idx == my_car.id:
             continue
         location = point.point
-        cosine = point.cos_inc_angle
         tea_vec = Vector3D(x=location.x, y=location.y, z=location.z)
-        origin_dis = tea_vec.length()
-        real_dis = origin_dis * cosine
-        my_car.distance_front = real_dis
+        my_car.distance_front = tea_vec.length()
