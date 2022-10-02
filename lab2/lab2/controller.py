@@ -13,13 +13,17 @@ def step(my_car):
         p = 0.5
         i = 0.1
         d = 0.5
+        # if distance > 10:
         # control.throttle = (distance-5)*p + \
         #     (20 - my_car.get_velocity().length())*i + \
         #     (2-my_car.get_acceleration().length())*d
-        # control.brake = 0
+
         target_velocity = (distance-5)*p
         target_velocity = min(target_velocity, 25)
-        my_car.set_target_velocity(target_velocity)
+        if target_velocity - my_car.get_velocity().length() > 10:
+            target_velocity = my_car.get_velocity().length() + 10
+        my_car.set_target_velocity(Vector3D(-target_velocity, 0, 0))
+        # control.brake = 0
         my_car.apply_control(control)
     except:
         return
