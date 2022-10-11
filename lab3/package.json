@@ -4,7 +4,7 @@
 	"description": "lab2 for iot class",
 	"scripts": {
 		"format": "autopep8 --in-place --recursive .",
-		"start": "python ./lab2/__init__.py"
+		"start": "cd lab3 && python ./__init__.py"
 	},
 	"author": "Leon Lin",
 	"license": "ISC"
