@@ -33,24 +33,31 @@ def step(my_car):
 
     wheelbase = 1
     now_velocity = my_car.get_velocity().length()
-    # get next distance and angle
+    # all point have arrive
     if len(WAYPOINTS) == 0:
         control = my_car.get_control()
         control.brake = 1  # 0~1
         my_car.apply_control(control)
         return
     next_point = WAYPOINTS.pop(0)
+    # get the vector from car to point
     vector_car2point = relative_location(my_car.get_location(), my_car.get_transform(
     ).rotation, Location(x=next_point[0], y=next_point[1], z=my_car.get_location().z))
+    # the offset for wheel
     wheel_vector = Vector3D(wheelbase, 0, 0)
+    # real distance
     distance = vector_car2point.length()
+    # 轉彎半徑的向量
     relate_vector = vector_car2point+wheel_vector
+    # 半徑長度
     d2 = relate_vector.x**2 + relate_vector.y**2
+    # 向量套公式得旋轉徑度
     steer_rad = math.atan(2 * wheelbase * relate_vector.y / d2)
+    # 轉角度
     steer_deg = math.degrees(steer_rad)
+    # 上下裁切
     steer_deg = np.clip(steer_deg, -1, 1)
     steer = steer_deg / 1
-    # print("distance", distance, "angle", angle, "velocity", now_velocity)
     if distance >= 0.5:
         WAYPOINTS.insert(0, next_point)
     # TODO
