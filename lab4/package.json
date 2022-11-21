@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"description": "lab4 for NTU IOT 2022",
 	"scripts": {
-		"start": "python lab4/__init__.py"
+		"start": "MESA_LOADER_DRIVER_OVERRIDE=i965 python lab4/__init__.py"
 	},
 	"author": "Leon Lin",
 	"license": "MIT"
