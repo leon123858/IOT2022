@@ -45,7 +45,7 @@ class HelpText(object):
     """Helper class to handle text output using pygame"""
 
     def __init__(self, font, width, height):
-        from . import __doc__ as lab4_doc
+        from __init__ import __doc__ as lab4_doc
         lines = lab4_doc.split("\n")
         self.font = font
         self.line_space = 18

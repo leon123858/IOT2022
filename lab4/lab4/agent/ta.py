@@ -1,6 +1,6 @@
 from carla import Actor, Image, VehicleControl, VehicleLightState
 import numpy as np
-from student import StudentAgent
+from .student import StudentAgent
 from ui import HUD
 from utils import get_actor_display_name
 import math

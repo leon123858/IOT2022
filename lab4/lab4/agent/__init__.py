@@ -1,2 +1,2 @@
-from ta import TaAgent
-from student import StudentAgent
+from .ta import TaAgent
+from .student import StudentAgent
