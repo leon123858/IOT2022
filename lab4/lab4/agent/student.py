@@ -9,16 +9,16 @@ class StudentAgent:
     lidar_image = None
 
     def __init__(self):
-        ## TODO
+        # TODO
         pass
 
     def step(self, actor: Actor) -> VehicleControl:
-        ## TODO
+        # TODO
         actor.set_light_state(VehicleLightState.HighBeam)
         control = actor.get_control()
 
-        ## To draw an image using OpenCV, please call imshow() in step().
-        ## Do not imshow() in on_xxx_data(). It freezes the program!
+        # To draw an image using OpenCV, please call imshow() in step().
+        # Do not imshow() in on_xxx_data(). It freezes the program!
         if self.camera_image is not None:
             cv.imshow("camera", self.camera_image)
 
@@ -30,8 +30,8 @@ class StudentAgent:
         return control
 
     def on_lidar_data(self, points: np.ndarray):
-        ## TODO
-        ## 'points' is an Nx4 array with x, y, z, intensity columns
+        # TODO
+        # 'points' is an Nx4 array with x, y, z, intensity columns
 
         lidar_range = 50.0
         ih = 600
@@ -49,16 +49,16 @@ class StudentAgent:
         self.lidar_image = image
 
     def on_camera_data(self, image: np.ndarray):
-        ## TODO
-        ## 'image' is an MxNx3 array with r, g, b columns
+        # TODO
+        # 'image' is an MxNx3 array with r, g, b columns
 
-        ## HSV thresholding
+        # HSV thresholding
         orange_min = np.array([28, 10, 10], np.uint8)
         orange_max = np.array([30, 80, 100], np.uint8)
         image = cv.cvtColor(image, cv.COLOR_BGR2HSV)
         image = cv.inRange(image, orange_min, orange_max)
 
-        ## erosion
+        # erosion
         erosion_size = 1
         kernel = cv.getStructuringElement(
             cv.MORPH_ELLIPSE,
