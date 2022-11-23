@@ -1,9 +1,52 @@
-from carla import Actor, Image, VehicleControl, VehicleLightState
+from carla import Actor, Image, VehicleControl, VehicleLightState, Vector3D, Location
 import numpy as np
 import cv2 as cv
 import colorsys
 import math
 from scipy.signal import find_peaks_cwt
+
+
+class Controller:
+    def __init__(self):
+        return
+
+    def relative_location(self, car_location, car_rotation, point_location):
+        origin = car_location
+        forward = car_rotation.get_forward_vector()
+        right = car_rotation.get_right_vector()
+        up = car_rotation.get_up_vector()
+        disp = point_location - origin
+        x = np.dot([disp.x, disp.y, disp.z], [forward.x, forward.y, forward.z])
+        y = np.dot([disp.x, disp.y, disp.z], [right.x, right.y, right.z])
+        z = np.dot([disp.x, disp.y, disp.z], [up.x, up.y, up.z])
+        return Vector3D(x, y, z)
+
+    def get_control_parameters(self, my_car, next_point):
+        wheelbase = 1
+        now_velocity = my_car.get_velocity().length()
+        # get the vector from car to point
+        vector_car2point = Vector3D(next_point[0], next_point[1], 0)
+        # the offset for wheel
+        wheel_vector = Vector3D(wheelbase, 0, 0)
+        # real distance
+        distance = vector_car2point.length()
+        # 轉彎半徑的向量
+        relate_vector = vector_car2point+wheel_vector
+        # 半徑長度
+        d2 = relate_vector.x**2 + relate_vector.y**2
+        # 向量套公式得旋轉徑度
+        steer_rad = math.atan(2 * wheelbase * relate_vector.y / d2)
+        # 轉角度
+        steer_deg = math.degrees(steer_rad)
+        # 上下裁切
+        steer_deg = np.clip(steer_deg, -1, 1)
+        steer = steer_deg / 1
+        # 油門
+        p = 0.01
+        i = 0.005
+        throttle = distance*p + (20-now_velocity)*i
+        brake = 0
+        return throttle, steer, brake
 
 
 class Imager:
@@ -42,7 +85,8 @@ class Camera_Imager(Imager):
 
     def get_histogram_peaks(self):
         histogram = self.get_position_histogram()
-        indices = find_peaks_cwt(histogram, 20, wavelet=None, max_distances=None, gap_thresh=None, min_length=None, min_snr=1, noise_perc=10, window_size=None)
+        indices = find_peaks_cwt(histogram, 20, wavelet=None, max_distances=None,
+                                 gap_thresh=None, min_length=None, min_snr=1, noise_perc=10, window_size=None)
         return indices
 
 
@@ -58,12 +102,21 @@ class StudentAgent:
         # TODO
         actor.set_light_state(VehicleLightState.HighBeam)
         control = actor.get_control()
-
+        controller = Controller()
         # To draw an image using OpenCV, please call imshow() in step().
         # Do not imshow() in on_xxx_data(). It freezes the program!
         if self.camera_image is not None:
             imager = Camera_Imager(self.camera_image)
-            print(imager.get_histogram_peaks())
+            left_line_place = imager.get_histogram_peaks()[0]
+            left_offset = 95 - left_line_place
+            forward_offset = 3
+            throttle, steer, brake = controller.get_control_parameters(
+                actor, [forward_offset, left_offset])
+            print(throttle, steer, brake)
+            control.throttle = throttle
+            control.steer = steer
+            control.brake = brake
+            actor.apply_control(control)
             cv.imshow("camera", self.camera_image)
 
         if self.lidar_image is not None:
