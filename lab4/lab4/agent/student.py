@@ -44,8 +44,9 @@ class Controller:
         # 油門
         p = 0.01
         i = 0.005
-        throttle = 0.3
-        brake = 0
+        throttle = 0.2
+        print(now_velocity)
+        brake = 0 if now_velocity < 2 else 0.5
         return throttle, steer, brake
 
 
@@ -66,8 +67,8 @@ class Camera_Imager(Imager):
     def __get_perspective_img(self):
         src_image = np.float32(
             [[300,  600],  # Bottom left
-             [350, 400],  # Top left
-             [450,  400],  # Top right
+             [350, 550],  # Top left
+             [450,  550],  # Top right
              [500, 600]])  # Bottom right
         dst_image = np.float32(
             [[300,  600],  # Bottom left
@@ -109,14 +110,25 @@ class StudentAgent:
             imager = Camera_Imager(self.camera_image)
             peaks = imager.get_histogram_peaks()
             if len(peaks) == 0:
-                left_line_place = 10
-            else:
+                left_line_place = 45
+            elif len(peaks) == 1:
                 left_line_place = peaks[0]
-            left_offset = 120.0 - (left_line_place + 30)
-            forward_offset = 10.0
+            else:
+                minv = 1000.0
+                choice = peaks[0]
+                for peak in peaks:
+                    if abs(peak - minv) < minv:
+                        minv = abs(peak - minv)
+                        left_line_place = choice
+                        break
+            left_offset = 45.0 - (left_line_place + 0)
+            left_offset = max(left_offset,-1)
+            left_offset = min(left_offset,1)
+               
+            forward_offset = 5.0
             throttle, steer, brake = controller.get_control_parameters(
-                actor, Vector3D(x=forward_offset, y=-left_offset*0.2, z=0.0))
-            print(left_offset)
+                actor, Vector3D(x=forward_offset, y=-left_offset*0.05, z=0.0))
+            print(peaks)
             control.throttle = throttle
             control.steer = steer
             control.brake = brake
