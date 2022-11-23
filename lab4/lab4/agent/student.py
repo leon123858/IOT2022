@@ -25,7 +25,7 @@ class Controller:
         wheelbase = 1
         now_velocity = my_car.get_velocity().length()
         # get the vector from car to point
-        vector_car2point = Vector3D(next_point[0], next_point[1], 0)
+        vector_car2point = next_point
         # the offset for wheel
         wheel_vector = Vector3D(wheelbase, 0, 0)
         # real distance
@@ -111,7 +111,7 @@ class StudentAgent:
             left_offset = 95 - left_line_place
             forward_offset = 3
             throttle, steer, brake = controller.get_control_parameters(
-                actor, [forward_offset, left_offset])
+                actor, Vector3D(forward_offset, left_offset, 0))
             print(throttle, steer, brake)
             control.throttle = throttle
             control.steer = steer
