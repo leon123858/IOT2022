@@ -3,6 +3,7 @@ import numpy as np
 import cv2 as cv
 import colorsys
 import math
+from scipy.signal import find_peaks_cwt
 
 
 class Imager:
@@ -39,22 +40,10 @@ class Camera_Imager(Imager):
         image = np.clip(self.image, a_min=0, a_max=1)
         return np.sum(image[math.floor(image.shape[0]/2):, :], axis=0)
 
-    def get_histogram_left_peak(self):
-        histogram = self.get_position_histogram(
-        )[0:math.floor(len(histogram)/2)]
-        max = np.max(histogram)
-        ret = []
-        for i in range(len(histogram)):
-            ispeak = True
-            if i-1 > 0:
-                ispeak &= (histogram[i] > 1.8 * histogram[i-1])
-            if i+1 < len(histogram):
-                ispeak &= (histogram[i] > 1.8 * histogram[i+1])
-
-            ispeak &= (histogram[i] > 0.05 * max)
-            if ispeak:
-                ret.append(i)
-        return ret
+    def get_histogram_peaks(self):
+        histogram = self.get_position_histogram()
+        indices = find_peaks_cwt(histogram, 20, wavelet=None, max_distances=None, gap_thresh=None, min_length=None, min_snr=1, noise_perc=10, window_size=None)
+        return indices
 
 
 class StudentAgent:
@@ -74,7 +63,7 @@ class StudentAgent:
         # Do not imshow() in on_xxx_data(). It freezes the program!
         if self.camera_image is not None:
             imager = Camera_Imager(self.camera_image)
-            print(imager.get_histogram_left_peak())
+            print(imager.get_histogram_peaks())
             cv.imshow("camera", self.camera_image)
 
         if self.lidar_image is not None:
