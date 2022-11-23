@@ -44,7 +44,7 @@ class Controller:
         # 油門
         p = 0.01
         i = 0.005
-        throttle = distance*p + (20-now_velocity)*i
+        throttle = 0.3
         brake = 0
         return throttle, steer, brake
 
@@ -107,17 +107,21 @@ class StudentAgent:
         # Do not imshow() in on_xxx_data(). It freezes the program!
         if self.camera_image is not None:
             imager = Camera_Imager(self.camera_image)
-            left_line_place = imager.get_histogram_peaks()[0]
-            left_offset = 95 - left_line_place
-            forward_offset = 3
+            peaks = imager.get_histogram_peaks()
+            if len(peaks) == 0:
+                left_line_place = 10
+            else:
+                left_line_place = peaks[0]
+            left_offset = 120.0 - (left_line_place + 30)
+            forward_offset = 10.0
             throttle, steer, brake = controller.get_control_parameters(
-                actor, Vector3D(forward_offset, left_offset, 0))
-            print(throttle, steer, brake)
+                actor, Vector3D(x=forward_offset, y=-left_offset*0.2, z=0.0))
+            print(left_offset)
             control.throttle = throttle
             control.steer = steer
             control.brake = brake
             actor.apply_control(control)
-            cv.imshow("camera", self.camera_image)
+            cv.imshow("camera", imager.image)
 
         if self.lidar_image is not None:
             cv.imshow("lidar", self.lidar_image)
