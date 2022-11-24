@@ -45,8 +45,7 @@ class Controller:
         p = 0.01
         i = 0.005
         throttle = 0.2
-        print(now_velocity)
-        brake = 0 if now_velocity < 2 else 0.5
+        brake = 0 if now_velocity < 3 else 0.5
         return throttle, steer, brake
 
 
@@ -67,8 +66,8 @@ class Camera_Imager(Imager):
     def __get_perspective_img(self):
         src_image = np.float32(
             [[300,  600],  # Bottom left
-             [350, 550],  # Top left
-             [450,  550],  # Top right
+             [350, 500],  # Top left
+             [450,  500],  # Top right
              [500, 600]])  # Bottom right
         dst_image = np.float32(
             [[300,  600],  # Bottom left
@@ -80,13 +79,18 @@ class Camera_Imager(Imager):
         warped = cv.warpPerspective(self.image, M, img_size)
         return warped
 
-    def get_position_histogram(self):
+    def get_position_histogram(self,mode=0):
         image = np.clip(self.image, a_min=0, a_max=1)
-        # return np.sum(image[math.floor(image.shape[0]/2):, :], axis=0)
-        return np.sum(image[:, :], axis=0)
+        if mode == 0:
+            return np.sum(image[:, :], axis=0)
+        elif mode == 1: #取下半
+            return np.sum(image[math.floor(image.shape[0]/2):, :], axis=0)
+        elif mode == 2: #up half
+            return np.sum(image[:math.floor(image.shape[0]/2), :], axis=0)
+        
 
-    def get_histogram_peaks(self):
-        histogram = self.get_position_histogram()
+    def get_histogram_peaks(self,mode=0):
+        histogram = self.get_position_histogram(mode)
         indices = find_peaks_cwt(histogram, 20, wavelet=None, max_distances=None,
                                  gap_thresh=None, min_length=None, min_snr=1, noise_perc=10, window_size=None)
         return indices
@@ -98,7 +102,23 @@ class StudentAgent:
 
     def __init__(self):
         # TODO
+        self.tmp = 55
         return
+
+    def choice_peak(self,peaks,point):
+        left_line_place = None
+        if len(peaks) == 1:
+            left_line_place = peaks[0]
+        else:
+            minv = 10000.0
+            for peak in peaks:
+                if abs(peak - point) < minv:
+                    minv = abs(peak - point)
+                    left_line_place = peak
+                    break
+            if minv > 70:
+                return None
+        return left_line_place
 
     def step(self, actor: Actor) -> VehicleControl:
         # TODO
@@ -109,27 +129,34 @@ class StudentAgent:
         # Do not imshow() in on_xxx_data(). It freezes the program!
         if self.camera_image is not None:
             imager = Camera_Imager(self.camera_image)
-            peaks = imager.get_histogram_peaks()
-            if len(peaks) == 0:
-                left_line_place = 45
-            elif len(peaks) == 1:
-                left_line_place = peaks[0]
-            else:
-                minv = 1000.0
-                choice = peaks[0]
-                for peak in peaks:
-                    if abs(peak - minv) < minv:
-                        minv = abs(peak - minv)
-                        left_line_place = choice
-                        break
-            left_offset = 45.0 - (left_line_place + 0)
+            peaks_far = imager.get_histogram_peaks(1)
+            peaks_close = imager.get_histogram_peaks(2)
+            point = 25.0
+            left_line_place = self.choice_peak(imager.get_histogram_peaks(0),point) 
+            # if len(peaks_close) == 2  :
+            #     if peaks_close[-1] < 650:
+            #         left_line_place = point - 50
+            # left_line_place_far = self.choice_peak(peaks_far,point)
+            # left_line_place_close = self.choice_peak(peaks_close,point)
+            # if left_line_place_far is not None and left_line_place_close is not None:
+            #     # left_line_place = self.choice_peak(imager.get_histogram_peaks(0),point) 
+            #     left_line_place = (left_line_place_far + left_line_place_close)/2
+            #     # left_line_place = left_line_place_close
+            # elif left_line_place_close is not None:
+            #     left_line_place = left_line_place_close
+            # else:
+            #     left_line_place = left_line_place_far
+            if left_line_place is None:
+                left_line_place = point - 55
+            left_offset = point - (left_line_place + 0)
             left_offset = max(left_offset, -1)
             left_offset = min(left_offset, 1)
-
+            if self.tmp > 0:
+                self.tmp = self.tmp -1 
+                left_offset = -1
             forward_offset = 5.0
             throttle, steer, brake = controller.get_control_parameters(
                 actor, Vector3D(x=forward_offset, y=-left_offset*0.05, z=0.0))
-            print(peaks)
             control.throttle = throttle
             control.steer = steer
             control.brake = brake
