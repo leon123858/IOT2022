@@ -92,8 +92,8 @@ class Camera_Imager(Imager):
 
     def get_histogram_peaks(self,mode=0):
         histogram = self.get_position_histogram(mode)
-        indices = find_peaks_cwt(histogram, 30, wavelet=None, max_distances=None,
-                                 gap_thresh=None, min_length=None, min_snr=1, noise_perc=20, window_size=None)
+        indices = find_peaks_cwt(histogram, 70, wavelet=None, max_distances=None,
+                                 gap_thresh=None, min_length=None, min_snr=1, noise_perc=70, window_size=None)
         return indices
 
 
@@ -103,7 +103,7 @@ class StudentAgent:
 
     def __init__(self):
         # TODO
-        self.tmp = 0
+        self.tmp = 35
         return
 
     def choice_peak(self,peaks,point):
@@ -117,7 +117,7 @@ class StudentAgent:
                     minv = abs(peak - point)
                     left_line_place = peak
                     break
-        return left_line_place
+        return left_line_place, len(peaks)
 
     def step(self, actor: Actor) -> VehicleControl:
         # TODO
@@ -131,11 +131,14 @@ class StudentAgent:
             peaks_far = imager.get_histogram_peaks(1)
             peaks_close = imager.get_histogram_peaks(2)
             point = 28.0
-            left_line_place_far = self.choice_peak(peaks_far,point) 
-            left_line_place_close = self.choice_peak(peaks_close,point)
-            if left_line_place_close - left_line_place_far > 30:
-                point = 95.0
-            print(left_line_place_far,left_line_place_close)
+            left_line_place_far, len1 = self.choice_peak(peaks_far,point) 
+            left_line_place_close, len2 = self.choice_peak(peaks_close,point)
+            if left_line_place_far is not None and left_line_place_close is not None :
+                if left_line_place_close - left_line_place_far > 30:
+                    point = 95.0
+            if len1 + len2 > 6:
+                point = 40.0
+            # print(left_line_place_far,left_line_place_close)
             if left_line_place_far is None:
                 left_line_place_far = left_line_place_close
             if left_line_place_close is None:
@@ -143,19 +146,10 @@ class StudentAgent:
             if left_line_place_far is None and left_line_place_close is None:
                 left_line_place_close = point
                 left_line_place_far = point
-            # if left_line_place_far  <  left_line_place_close:
-            #     print(True)
-            #     left_line_place = left_line_place_close
-            # else:
-            #     print(False) 
             left_line_place = left_line_place_far
             left_offset = point - (left_line_place + 0)
             left_offset = max(left_offset, -1)
             left_offset = min(left_offset, 1)
-            # if left_line_place_close > 100:
-            #     if random.choice([True,True,False,False,False]):
-            #         print("adjust")
-            #         left_offset = 1
             if self.tmp > 0:
                 self.tmp = self.tmp -1 
                 left_offset = -1
@@ -165,7 +159,6 @@ class StudentAgent:
             control.throttle = throttle
             control.steer = steer
             control.brake = brake
-            actor.apply_control(control)
             cv.imshow("camera", imager.image)
 
         if self.lidar_image is not None:
@@ -173,6 +166,7 @@ class StudentAgent:
 
         cv.waitKey(1)
 
+        actor.apply_control(control)
         return control
 
     def on_lidar_data(self, points: np.ndarray):
