@@ -45,8 +45,8 @@ class Controller:
         # 油門
         p = 0.01
         i = 0.005
-        throttle = 0.25
-        brake = 0 if now_velocity < 2 else 0.5
+        throttle = 0.3
+        brake = 0 if now_velocity < 3 else 0.5
         return throttle, steer, brake
 
 
@@ -55,7 +55,20 @@ class Imager:
         self.image = image
         return
 
-
+class Lidar_Imager(Imager):
+    def get_histogram(self,mode=0):
+        image = np.clip(self.image, a_min=0, a_max=1)
+        img_gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+        if mode == 0:
+            return np.sum(img_gray[:, :], axis=0)
+        elif mode == 1: #
+            return np.sum(img_gray[:, :], axis=1)
+    def get_histogram_peaks(self,mode=0):
+        histogram = self.get_histogram(mode)
+        indices = find_peaks_cwt(histogram, 10, wavelet=None, max_distances=None,
+                                 gap_thresh=None, min_length=None, min_snr=1, noise_perc=10, window_size=None)
+        return indices
+    
 class Camera_Imager(Imager):
     # https://www.ncnynl.com/archives/201904/2960.html
     # image transform
@@ -104,6 +117,8 @@ class StudentAgent:
     def __init__(self):
         # TODO
         self.tmp = 35
+        self.tmp2 = 0
+        self.stop = 0
         return
 
     def choice_peak(self,peaks,point):
@@ -124,20 +139,20 @@ class StudentAgent:
         actor.set_light_state(VehicleLightState.HighBeam)
         control = actor.get_control()
         controller = Controller()
+        # use_lidar = False
         # To draw an image using OpenCV, please call imshow() in step().
         # Do not imshow() in on_xxx_data(). It freezes the program!
         if self.camera_image is not None:
             imager = Camera_Imager(self.camera_image)
             peaks_far = imager.get_histogram_peaks(1)
             peaks_close = imager.get_histogram_peaks(2)
-            point = 28.0
+            point = 33.0
             left_line_place_far, len1 = self.choice_peak(peaks_far,point) 
             left_line_place_close, len2 = self.choice_peak(peaks_close,point)
             if left_line_place_far is not None and left_line_place_close is not None :
                 if left_line_place_close - left_line_place_far > 30:
                     point = 95.0
-            if len1 + len2 > 6:
-                point = 40.0
+            # print(len1,len2)
             # print(left_line_place_far,left_line_place_close)
             if left_line_place_far is None:
                 left_line_place_far = left_line_place_close
@@ -146,6 +161,8 @@ class StudentAgent:
             if left_line_place_far is None and left_line_place_close is None:
                 left_line_place_close = point
                 left_line_place_far = point
+            if len1 + len2 > 5:
+                self.tmp2 = self.tmp2 + 1
             left_line_place = left_line_place_far
             left_offset = point - (left_line_place + 0)
             left_offset = max(left_offset, -1)
@@ -154,15 +171,36 @@ class StudentAgent:
                 self.tmp = self.tmp -1 
                 left_offset = -1
             forward_offset = 5.0
+            if self.tmp2 > 1800 - 300:
+                self.stop = 1
+            self.tmp2 = self.tmp2 + 1
+            # print(self.tmp2)
             throttle, steer, brake = controller.get_control_parameters(
                 actor, Vector3D(x=forward_offset, y=-left_offset*0.05, z=0.0))
             control.throttle = throttle
             control.steer = steer
             control.brake = brake
-            cv.imshow("camera", imager.image)
+            # if self.tmp2 > 4:
+            #     control.steer = 0
+            cv.imshow("camera", self.camera_image)
 
         if self.lidar_image is not None:
+            # lidar_img = Lidar_Imager(self.lidar_image)
+            # peaks_x = lidar_img.get_histogram_peaks(0)
+            # x_diff = abs(peaks_x[0]-422)
+            # print(x_diff)
+            # if x_diff < 6 and use_lidar:
+            #     left_offset = 1
+            #     forward_offset = 5.0
+            #     throttle, steer, brake = controller.get_control_parameters(
+            #     actor, Vector3D(x=forward_offset, y=-left_offset*0.05, z=0.0))
+            #     control.throttle = throttle
+            #     control.steer = steer
+            #     control.brake = brake
             cv.imshow("lidar", self.lidar_image)
+        
+        if self.stop == 1:
+            control.brake = 1
 
         cv.waitKey(1)
 
