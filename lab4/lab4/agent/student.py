@@ -3,6 +3,7 @@ import numpy as np
 import cv2 as cv
 import colorsys
 import math
+import random
 from scipy.signal import find_peaks_cwt
 
 
@@ -44,8 +45,8 @@ class Controller:
         # 油門
         p = 0.01
         i = 0.005
-        throttle = 0.2
-        brake = 0 if now_velocity < 3 else 0.5
+        throttle = 0.25
+        brake = 0 if now_velocity < 2 else 0.5
         return throttle, steer, brake
 
 
@@ -65,15 +66,15 @@ class Camera_Imager(Imager):
 
     def __get_perspective_img(self):
         src_image = np.float32(
-            [[300,  600],  # Bottom left
-             [350, 500],  # Top left
-             [450,  500],  # Top right
-             [500, 600]])  # Bottom right
+            [[250,  600],  # Bottom left
+             [300, 400],  # Top left
+             [600,  400],  # Top right
+             [650, 600]])  # Bottom right
         dst_image = np.float32(
-            [[300,  600],  # Bottom left
-             [300,    0],  # Top left
-             [500,   0],  # Top right
-             [500, 600]])  # Bottom right
+            [[200,  600],  # Bottom left
+             [200,    0],  # Top left
+             [600,   0],  # Top right
+             [600, 600]])  # Bottom right
         img_size = (self.image.shape[1], self.image.shape[0])
         M = cv.getPerspectiveTransform(src_image, dst_image)
         warped = cv.warpPerspective(self.image, M, img_size)
@@ -91,8 +92,8 @@ class Camera_Imager(Imager):
 
     def get_histogram_peaks(self,mode=0):
         histogram = self.get_position_histogram(mode)
-        indices = find_peaks_cwt(histogram, 20, wavelet=None, max_distances=None,
-                                 gap_thresh=None, min_length=None, min_snr=1, noise_perc=10, window_size=None)
+        indices = find_peaks_cwt(histogram, 30, wavelet=None, max_distances=None,
+                                 gap_thresh=None, min_length=None, min_snr=1, noise_perc=20, window_size=None)
         return indices
 
 
@@ -102,7 +103,7 @@ class StudentAgent:
 
     def __init__(self):
         # TODO
-        self.tmp = 55
+        self.tmp = 0
         return
 
     def choice_peak(self,peaks,point):
@@ -116,8 +117,6 @@ class StudentAgent:
                     minv = abs(peak - point)
                     left_line_place = peak
                     break
-            if minv > 70:
-                return None
         return left_line_place
 
     def step(self, actor: Actor) -> VehicleControl:
@@ -131,26 +130,32 @@ class StudentAgent:
             imager = Camera_Imager(self.camera_image)
             peaks_far = imager.get_histogram_peaks(1)
             peaks_close = imager.get_histogram_peaks(2)
-            point = 25.0
-            left_line_place = self.choice_peak(imager.get_histogram_peaks(0),point) 
-            # if len(peaks_close) == 2  :
-            #     if peaks_close[-1] < 650:
-            #         left_line_place = point - 50
-            # left_line_place_far = self.choice_peak(peaks_far,point)
-            # left_line_place_close = self.choice_peak(peaks_close,point)
-            # if left_line_place_far is not None and left_line_place_close is not None:
-            #     # left_line_place = self.choice_peak(imager.get_histogram_peaks(0),point) 
-            #     left_line_place = (left_line_place_far + left_line_place_close)/2
-            #     # left_line_place = left_line_place_close
-            # elif left_line_place_close is not None:
+            point = 28.0
+            left_line_place_far = self.choice_peak(peaks_far,point) 
+            left_line_place_close = self.choice_peak(peaks_close,point)
+            if left_line_place_close - left_line_place_far > 30:
+                point = 95.0
+            print(left_line_place_far,left_line_place_close)
+            if left_line_place_far is None:
+                left_line_place_far = left_line_place_close
+            if left_line_place_close is None:
+                left_line_place_close = left_line_place_far
+            if left_line_place_far is None and left_line_place_close is None:
+                left_line_place_close = point
+                left_line_place_far = point
+            # if left_line_place_far  <  left_line_place_close:
+            #     print(True)
             #     left_line_place = left_line_place_close
             # else:
-            #     left_line_place = left_line_place_far
-            if left_line_place is None:
-                left_line_place = point - 55
+            #     print(False) 
+            left_line_place = left_line_place_far
             left_offset = point - (left_line_place + 0)
             left_offset = max(left_offset, -1)
             left_offset = min(left_offset, 1)
+            # if left_line_place_close > 100:
+            #     if random.choice([True,True,False,False,False]):
+            #         print("adjust")
+            #         left_offset = 1
             if self.tmp > 0:
                 self.tmp = self.tmp -1 
                 left_offset = -1
