@@ -82,7 +82,8 @@ class Camera_Imager(Imager):
 
     def get_position_histogram(self):
         image = np.clip(self.image, a_min=0, a_max=1)
-        return np.sum(image[math.floor(image.shape[0]/2):, :], axis=0)
+        # return np.sum(image[math.floor(image.shape[0]/2):, :], axis=0)
+        return np.sum(image[:, :], axis=0)
 
     def get_histogram_peaks(self):
         histogram = self.get_position_histogram()
@@ -122,9 +123,9 @@ class StudentAgent:
                         left_line_place = choice
                         break
             left_offset = 45.0 - (left_line_place + 0)
-            left_offset = max(left_offset,-1)
-            left_offset = min(left_offset,1)
-               
+            left_offset = max(left_offset, -1)
+            left_offset = min(left_offset, 1)
+
             forward_offset = 5.0
             throttle, steer, brake = controller.get_control_parameters(
                 actor, Vector3D(x=forward_offset, y=-left_offset*0.05, z=0.0))
