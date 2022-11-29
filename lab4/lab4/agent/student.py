@@ -171,8 +171,8 @@ class StudentAgent:
                 self.tmp = self.tmp -1 
                 left_offset = -1
             forward_offset = 5.0
-            if self.tmp2 > 1800 - 300:
-                self.stop = 1
+            # if self.tmp2 > 1800 - 150:
+                # self.stop = 1
             self.tmp2 = self.tmp2 + 1
             # print(self.tmp2)
             throttle, steer, brake = controller.get_control_parameters(
@@ -180,8 +180,12 @@ class StudentAgent:
             control.throttle = throttle
             control.steer = steer
             control.brake = brake
-            # if self.tmp2 > 4:
-            #     control.steer = 0
+            if self.tmp2 > 1800 - 150 and self.tmp2 < 1800 - 120:
+                control.steer = -0.2
+            elif self.tmp2 > 1800 - 90:
+                control.steer = 0
+            if self.tmp2 > 1800:
+                control.brake = 1
             cv.imshow("camera", self.camera_image)
 
         if self.lidar_image is not None:
