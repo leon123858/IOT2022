@@ -28,7 +28,7 @@ def game_loop(args):
     original_settings = None
 
     try:
-        # Initialize world
+        ## Initialize world
         client = carla.Client(args.host, args.port)
         client.set_timeout(20.0)
         client.load_world(WORLD)
@@ -51,7 +51,7 @@ def game_loop(args):
                 "experience some issues with the traffic simulation"
             )
 
-        # Initialize pygame display
+        ## Initialize pygame display
         display = pygame.display.set_mode(
             (args.width, args.height), pygame.HWSURFACE | pygame.DOUBLEBUF
         )
@@ -156,8 +156,7 @@ def tick(state: State, hud: HUD, player: Vehicle, world: carla.World, clock):
         )
         if distance <= CHECKPOINT_DISTANCE_THRESHOLD:
             state.checkpoint_index += 1
-            hud.notification("Pass checkpoint {}".format(
-                state.checkpoint_index))
+            hud.notification("Pass checkpoint {}".format(state.checkpoint_index))
             judge(state, hud)
 
     else:
@@ -201,8 +200,7 @@ def update_hud(state: State, hud: HUD, player: Vehicle, world: carla.World, cloc
         "",
         "Vehicle: % 20s" % get_actor_display_name(player.actor, truncate=20),
         "Map:     % 20s" % world.get_map().name.split("/")[-1],
-        "Simulation time: % 12s" % datetime.timedelta(
-            seconds=int(hud.simulation_time)),
+        "Simulation time: % 12s" % datetime.timedelta(seconds=int(hud.simulation_time)),
         "",
         "Speed:   % 15.0f km/h" % (3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)),
         "Compass:% 17.0f\N{DEGREE SIGN} % 2s" % (compass, heading),
@@ -244,8 +242,7 @@ def update_hud(state: State, hud: HUD, player: Vehicle, world: carla.World, cloc
     ]
     if len(vehicles) > 1:
         hud._info_text += ["Nearby vehicles:"]
-
-        def distance(l): return math.sqrt(
+        distance = lambda l: math.sqrt(
             (l.x - t.location.x) ** 2
             + (l.y - t.location.y) ** 2
             + (l.z - t.location.z) ** 2
@@ -321,14 +318,12 @@ def judge(state: State, hud: HUD):
 
     elif state.finished:
         hud.notification(
-            "SCORE: %.2f (%d lane invasions)" % (
-                score, state.lane_invasion_count)
+            "SCORE: %.2f (%d lane invasions)" % (score, state.lane_invasion_count)
         )
 
     else:
         hud.notification(
-            "SCORE: %.2f (%d lane invasions)" % (
-                score, state.lane_invasion_count)
+            "SCORE: %.2f (%d lane invasions)" % (score, state.lane_invasion_count)
         )
 
 
@@ -337,17 +332,22 @@ def compute_score(state: State):
         return 0
 
     elif state.finished:
-        lane_invasion_penalty = state.lane_invasion_count * LANE_INVASION_PENALTY
-        exceed_last_ckpt_penalty = (
-            EXCEED_LAST_CHECKPOINT_PENALTY if state.exceed_last_checkpoint else 0.0
+        lane_invasion_penalty = (
+            max(state.lane_invasion_count - 5, 0) * LANE_INVASION_PENALTY
         )
-        penalty = lane_invasion_penalty + exceed_last_ckpt_penalty
+        # exceed_last_ckpt_penalty = (
+        #     EXCEED_LAST_CHECKPOINT_PENALTY if state.exceed_last_checkpoint else 0.0
+        # )
+        penalty = lane_invasion_penalty
         checkpoint_score = CHECKPOINTS[-1].score
         score = max(0.0, checkpoint_score - penalty)
         return score
 
     else:
-        penalty = state.lane_invasion_count * LANE_INVASION_PENALTY
+        lane_invasion_penalty = (
+            max(state.lane_invasion_count - 5, 0) * LANE_INVASION_PENALTY
+        )
+        penalty = lane_invasion_penalty
 
         if state.checkpoint_index > 0:
             checkpoint_score = CHECKPOINTS[state.checkpoint_index - 1].score

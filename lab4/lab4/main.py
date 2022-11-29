@@ -4,8 +4,7 @@ from loop import game_loop
 
 
 def main():
-    argparser = argparse.ArgumentParser(
-        description="CARLA Manual Control Client")
+    argparser = argparse.ArgumentParser(description="CARLA Manual Control Client")
     argparser.add_argument(
         "-v",
         "--verbose",
