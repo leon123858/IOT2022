@@ -1,0 +1,22 @@
+# editor
+#*#
+*~
+.*~
+*.swp
+*.swo
+\#*#
+
+# python
+*.pyc
+*.pyo
+__pycache__/
+
+# rust
+target/
+Cargo.lock
+.cargo/
+
+# ROS
+/build/
+/install/
+/log/
