@@ -14,6 +14,7 @@ from .utils import get_actor_blueprints, get_actor_display_name
 from typing import Optional
 from .ui import HUD
 from collections import defaultdict
+from .agent_simulate import Agent
 
 
 class Vehicle:
@@ -49,7 +50,8 @@ class Vehicle:
         )
         blueprint.set_attribute("role_name", role_name)
         if blueprint.has_attribute("color"):
-            color = random.choice(blueprint.get_attribute("color").recommended_values)
+            color = random.choice(
+                blueprint.get_attribute("color").recommended_values)
             blueprint.set_attribute("color", color)
         if blueprint.has_attribute("driver_id"):
             driver_id = random.choice(
@@ -61,7 +63,8 @@ class Vehicle:
 
         # set the max speed
         if blueprint.has_attribute("speed"):
-            max_speed = float(blueprint.get_attribute("speed").recommended_values[1])
+            max_speed = float(blueprint.get_attribute(
+                "speed").recommended_values[1])
             max_speed_fast = float(
                 blueprint.get_attribute("speed").recommended_values[2]
             )
@@ -76,7 +79,8 @@ class Vehicle:
                 print("There are no spawn points available in your map/town.")
                 print("Please add some Vehicle Spawn Point to your UE4 scene.")
                 sys.exit(1)
-            spawn_point = random.choice(spawn_points) if spawn_points else Transform()
+            spawn_point = random.choice(
+                spawn_points) if spawn_points else Transform()
 
         # Spawn actor
         actor = world.try_spawn_actor(blueprint, spawn_point)
@@ -93,6 +97,8 @@ class Vehicle:
         # Initialize camera manager
         camera_manager = CameraManager(actor, hud, gamma)
 
+        agent = Agent()
+
         # Assign fields
         self.show_vehicle_telemetry = False
         self.max_speed = max_speed
@@ -106,6 +112,7 @@ class Vehicle:
         self.camera_manager = camera_manager
         self.actor = actor
         self.hud = hud
+        self.agent = agent
 
         # NOTE: Callbacks must be done after assiging class fields.
         # weak_self = weakref.ref(self)
@@ -153,7 +160,8 @@ class Vehicle:
 
     def step(self):
         loc = self.actor.get_location()
-
+        # simulate ROS control
+        self.agent.tick(self.actor)
         if self.curr_location is None:
             self.curr_location = loc
         else:
@@ -180,7 +188,8 @@ class Vehicle:
         self.collision_sensor.set_callback(lambda event: callback(self, event))
 
     def listen_lane_invasion(self, callback):
-        self.lane_invasion_sensor.set_callback(lambda event: callback(self, event))
+        self.lane_invasion_sensor.set_callback(
+            lambda event: callback(self, event))
 
     @staticmethod
     def modify_vehicle_physics(actor):
