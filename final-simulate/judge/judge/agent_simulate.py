@@ -49,7 +49,7 @@ class Agent():
     def __init__(self):
         self.n_ticks = 0
 
-    def tick(self, actor: Actor) -> VehicleControl:
+    def tick(self, actor: Actor):
         control = actor.get_control()
         velocity = actor.get_velocity().length()
         location = actor.get_location()
@@ -58,6 +58,6 @@ class Agent():
         control.throttle = 0
         control.steer = 0
         control.brake = 0
-        self.n_ticks += 1
         actor.apply_control(control)
-        return control
+        self.n_ticks += 1
+        return
