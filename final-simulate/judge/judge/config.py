@@ -4,7 +4,7 @@ import random
 WORLD = "Town03"
 SPEC_HEIGHT = 3
 INIT_TRANS = Transform(Location(12.0454, -94.987213, 5),
-                       Rotation(0.0, 90.0, 0.0))
+                       Rotation(0.0, -90.0, 0.0))
 SPECTATOR_TRANS = Transform(
     Location(
         INIT_TRANS.location.x,

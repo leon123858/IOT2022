@@ -8,9 +8,60 @@ import math
 
 class Controller_C():
     def __init__(self) -> None:
-        pass
+        self.points = [
+            [12, -95],
+            [10.4, -110.0],
+            [9.5, -123.3],
+            [9.7, -126],
+            [11.1, -131.1],
+            [14.4, -133.7],
+            [15.8, -134],
+            [20.3, -134.3],
+            [70.5, -133.2],
+            [78.0, -133.4],
+            [83.8, -135.2],
+            [89.1, -141.0],
+            [89.1, -145.2],
+            [90, -180],
+            [89.0, -191.8],
+            [86.2, -198.1],
+            [80.0, -205.4],
+            [73.8, -206.2],
+            [63.2446, -209.55],
+            [26.7, -207.6],
+            [10.5, -205.0],
+            [1.2, -198.9],
+            [0.6, -194.7],
+            [-2.6, -186.6],
+            [-4.1, -149.4],
+            [-5, -113.4],
+            [-5, -50.4],
+            [-7.4, -33.1],
+            [-8.5, -27.4],
+            [-11.1, -21.4],
+            [-16.0, -16.8],
+            [-21.2, -10.0],
+            [-22.7, -5.6],
+            [-23.6, 2.4],
+            [-22.1, 9.0],
+            [-17.5, 15.8],
+            [-13.9, 21.7],
+            [-11.8, 26.9],
+            [-10.3, 39.4],
+            [-9.6, 118.3],
+            [-10.3, 124.2],
+            [-13.4, 128.1],
+            [-19.1, 130.6],
+            [-61.4, 131.2],
+            [-85.4, 130.6],
+            [-98.3, 129.0],
+            [-107.19, 129.895],
+        ]
 
-    def relative_location(car_location, car_rotation, point_location) -> Vector3D:
+        self.index = 0
+        self.length = len(self.points)
+
+    def relative_location(self, car_location, car_rotation, point_location) -> Vector3D:
         origin = car_location
         forward = car_rotation.get_forward_vector()
         right = car_rotation.get_right_vector()
@@ -48,16 +99,43 @@ class Agent():
 
     def __init__(self):
         self.n_ticks = 0
+        self.c_controller = Controller_C()
+        self.break_timer = 0
+        self.state = "RUN"
 
     def tick(self, actor: Actor):
         control = actor.get_control()
         velocity = actor.get_velocity().length()
         location = actor.get_location()
         rotation = actor.get_transform().rotation
-        print(location)
-        control.throttle = 0
-        control.steer = 0
-        control.brake = 0
+        if self.state == "STOP":
+            self.break_timer += 1
+            if self.break_timer > 20:
+                self.break_timer = 0
+                self.state = "RUN"
+            control.throttle = 0
+            control.steer = 0
+            control.brake = 1
+            actor.apply_control(control)
+            return
+        if self.c_controller.index == self.c_controller.length:
+            control.throttle = 0
+            control.steer = 0
+            control.brake = 0
+            actor.apply_control(control)
+            return
+        next_point = self.c_controller.points[self.c_controller.index]
+        steer, distance = self.c_controller.get_steer(
+            next_point, location, rotation)
+        if distance <= 0.5 and self.c_controller.index < self.c_controller.length:
+            if self.c_controller.index == 18 or self.c_controller.index == 46:
+                self.state = "STOP"
+            self.c_controller.index = self.c_controller.index + 1
+        p = 0.02
+        i = 0.005
+        control.throttle = distance*p + (20-velocity)*i
+        control.steer = steer
+        control.brake = 0.5 if velocity > 5 else 0
         actor.apply_control(control)
         self.n_ticks += 1
         return

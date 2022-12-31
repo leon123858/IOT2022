@@ -121,9 +121,11 @@ class KeyboardControl(object):
                         world.constant_velocity_enabled = False
                         hud.notification("Disabled Constant Velocity Mode")
                     else:
-                        player.actor.enable_constant_velocity(carla.Vector3D(17, 0, 0))
+                        player.actor.enable_constant_velocity(
+                            carla.Vector3D(17, 0, 0))
                         world.constant_velocity_enabled = True
-                        hud.notification("Enabled Constant Velocity Mode at 60 km/h")
+                        hud.notification(
+                            "Enabled Constant Velocity Mode at 60 km/h")
                 elif event.key == K_o:
                     try:
                         if world.doors_are_open:
@@ -152,7 +154,8 @@ class KeyboardControl(object):
                     index_ctrl = 0
                     if pygame.key.get_mods() & KMOD_CTRL:
                         index_ctrl = 9
-                    player.camera_manager.set_sensor(event.key - 1 - K_0 + index_ctrl)
+                    player.camera_manager.set_sensor(
+                        event.key - 1 - K_0 + index_ctrl)
                 elif event.key == K_r and not (pygame.key.get_mods() & KMOD_CTRL):
                     player.camera_manager.toggle_recording()
                 # elif event.key == K_r and (pygame.key.get_mods() & KMOD_CTRL):
@@ -258,7 +261,8 @@ class KeyboardControl(object):
 
         if not self._autopilot_enabled:
             if isinstance(self._control, carla.VehicleControl):
-                self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
+                self._parse_vehicle_keys(
+                    pygame.key.get_pressed(), clock.get_time())
                 self._control.reverse = self._control.gear < 0
                 # Set automatic control-related vehicle lights
                 if self._control.brake:
@@ -273,7 +277,8 @@ class KeyboardControl(object):
                     current_lights != self._lights
                 ):  # Change the light state only if necessary
                     self._lights = current_lights
-                    player.actor.set_light_state(carla.VehicleLightState(self._lights))
+                    player.actor.set_light_state(
+                        carla.VehicleLightState(self._lights))
             elif isinstance(self._control, carla.WalkerControl):
                 self._parse_walker_keys(
                     pygame.key.get_pressed(), clock.get_time(), world
