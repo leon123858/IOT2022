@@ -79,7 +79,7 @@ class Controller_C():
     def move_point(self, distance) -> None:
         if distance <= 0.5 and self.index < self.length:
             # check if is Target index
-            if self.target_index.count(self.target_index) > 0:
+            if self.target_index.count(self.index) > 0:
                 self.state = "STOP"
             self.index = self.index + 1
 
