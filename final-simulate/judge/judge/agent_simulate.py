@@ -59,6 +59,7 @@ DATA = [
 class Controller_C():
     def __init__(self) -> None:
         self.points = DATA
+        self.target_index = [18, 46]
         self.index = 0
         self.length = len(self.points)
         self.break_timer = 0
@@ -78,11 +79,12 @@ class Controller_C():
     def move_point(self, distance) -> None:
         if distance <= 0.5 and self.index < self.length:
             # check if is Target index
-            if self.index == 18 or self.index == 46:
+            if self.target_index.count(self.target_index) > 0:
                 self.state = "STOP"
             self.index = self.index + 1
 
-    def relative_location(self, car_location, car_rotation, point_location) -> Vector3D:
+    @staticmethod
+    def relative_location(car_location, car_rotation, point_location) -> Vector3D:
         origin = car_location
         forward = car_rotation.get_forward_vector()
         right = car_rotation.get_right_vector()
@@ -121,8 +123,17 @@ class Controller_C():
         p = 0.02
         i = 0.005
         throttle = distance*p + (20-velocity)*i
-        brake = 0.5 if velocity > 5 else 0
+        brake = 0.5 if velocity > 10 else 0
         return throttle, brake
+
+    def get_control(self, location, rotation, velocity):
+        if self.check_STOP_state():
+            return 0, 0, 1
+        steer, distance = self.get_steer(location, rotation)
+        self.move_point(distance)
+        throttle, brake = self.get_PI_control_result(
+            distance, velocity)
+        return throttle, steer, brake
 
 
 class Agent():
@@ -133,19 +144,14 @@ class Agent():
 
     def tick(self, actor: Actor):
         control = actor.get_control()
+        # get_parameter
         velocity = actor.get_velocity().length()
         location = actor.get_location()
         rotation = actor.get_transform().rotation
-        if self.c_controller.check_STOP_state():
-            control.throttle = 0
-            control.steer = 0
-            control.brake = 1
-            actor.apply_control(control)
-            return
-        steer, distance = self.c_controller.get_steer(location, rotation)
-        self.c_controller.move_point(distance)
-        throttle, brake = self.c_controller.get_PI_control_result(
-            distance, velocity)
+        # controller
+        throttle, steer, brake = self.c_controller.get_control(
+            location, rotation, velocity)
+        # control
         control.throttle = throttle
         control.steer = steer
         control.brake = brake
