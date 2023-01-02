@@ -123,7 +123,7 @@ class Controller_C():
         p = 0.02
         i = 0.005
         throttle = distance*p + (20-velocity)*i
-        brake = 0.5 if velocity > 10 else 0
+        brake = 0.5 if velocity > 5 else 0
         return throttle, brake
 
     def get_control(self, location, rotation, velocity):
