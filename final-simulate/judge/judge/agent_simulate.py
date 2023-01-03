@@ -58,7 +58,7 @@ DATA = {
         [-10.3, 39.4],
         #  路口
         [-9.6, 118.3],
-        [-10.0, 128.0],
+        [-10.0, 129.5],
         #  4 right end
         [-21.2, 130.0],
         #  路口
@@ -77,13 +77,20 @@ DATA = {
 class Controller_C():
     def __init__(self) -> None:
         self.points = DATA["waypoints"]
-        self.target_index = []
+        self.target_index = [15, 44]
+        self.traffic_index = [1, 4, 9, 16, 21, 36, 39]
         self.index = 0
         self.length = len(self.points)
         self.break_timer = 0
         self.state = "RUN"
 
+    def set_traffic_run(self):
+        if self.state == "TRAFFIC":
+            self.state = "RUN"
+
     def check_STOP_state(self) -> bool:
+        if self.state == "TRAFFIC":
+            return True
         if self.state == "STOP":
             self.break_timer += 1
             if self.break_timer > 20:
@@ -99,6 +106,8 @@ class Controller_C():
             # check if is Target index
             if self.target_index.count(self.index) > 0:
                 self.state = "STOP"
+            elif self.traffic_index.count(self.index) > 0:
+                self.state = "STOP"  # just test, real is "TRAFFIC"
             self.index = self.index + 1
 
     @staticmethod
