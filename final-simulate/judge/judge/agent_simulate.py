@@ -44,12 +44,11 @@ DATA = {
         [-6.5, -45.7],
         #  circle前
         [-7.4, -33.1],
-        [-8.5, -27.4],
-        [-11.1, -21.4],
-        [-16.0, -16.8],
+        [-8.2, -27.4],
+        [-10.7, -21.4],
+        [-15.5, -16.8],
         [-21.2, -10.0],
         [-22.7, -5.6],
-        [-23.6, 2.4],
         [-22.1, 9.0],
         [-17.5, 15.8],
         [-13.9, 21.7],
@@ -150,7 +149,7 @@ class Controller_C():
         p = 0.02
         i = 0.005
         throttle = distance*p + (20-velocity)*i
-        brake = 0.5 if velocity > 5 else 0
+        brake = 0.5 if velocity > 7 else 0
         return throttle, brake
 
     def get_control(self, location, rotation, velocity):
