@@ -61,11 +61,12 @@ DATA = {
         #  4 right end
         [-21.2, 127.3],
         #  路口
-        [-55.4, 127.3],
+        [-55.4, 127.5],
+        [-92.8, 128.9],
         #  路口 end
         [-99.4, 129.0],
         #  C2
-        [-107.19, 129.4],
+        [-107.19, 129.1],
     ],
 }
 
@@ -73,7 +74,7 @@ DATA = {
 class Controller_C():
     def __init__(self) -> None:
         self.points = DATA["waypoints"]
-        self.target_index = [15, 40]
+        self.target_index = [15, 41]
         self.traffic_index = [1, 4, 9, 16, 21, 35, 38]
         self.index = 0
         self.length = len(self.points)
