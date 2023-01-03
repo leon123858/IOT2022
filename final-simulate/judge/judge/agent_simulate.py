@@ -73,8 +73,8 @@ DATA = {
 class Controller_C():
     def __init__(self) -> None:
         self.points = DATA["waypoints"]
-        self.target_index = [15, 44]
-        self.traffic_index = [1, 4, 9, 16, 21, 35, 39]
+        self.target_index = [15, 40]
+        self.traffic_index = [1, 4, 9, 16, 21, 35, 38]
         self.index = 0
         self.length = len(self.points)
         self.break_timer = 0
