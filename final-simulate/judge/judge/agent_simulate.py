@@ -6,7 +6,7 @@ from carla import Actor, Image, VehicleControl, VehicleLightState, Vector3D, Loc
 import math
 
 DATA = {
-    waypoints: [
+    "waypoints": [
         #  start
         [12, -95],
         #  第一路口
